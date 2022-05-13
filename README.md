@@ -1,189 +1,152 @@
-n_input = 2
-m_input = 3
-A_input = [3 1;4 3;1 2]
-b_input = [3 6 4]
-c_input = [-4 -1]
-sign = [0 -1 1]
-A = []
-b = []
-c = c_input
-row_add = 0
-for i = 1:m_input
-     if sign(i) == 0
-         A = [A;A_input(i,:)]
-         b = [b b_input(i)]
-         A = [A;-A_input(i,:)]
-         b = [b -b_input(i)]
-         row_add = row_add + 1
-     else if sign(i) < 0
-         A = [A;-A_input(i,:)]
-         b = [b -b_input(i)]
-     else
-         A = [A;A_input(i,:)]
-         b = [b b_input(i)]
-     end
-     end
-end
-m = m_input + row_add
-n = n_input + m
-S = eye(m)
-A = [A S]
-c = [c zeros(1,m)]
-index = []
-for i = 1:m
-    index = [index n_input+i]
-end
-B = []
-Cb = []
-for i = 1:m
-     B = [B A(:,index(i))];
-     Cb = [Cb c(index(i))];
-end
-X = zeros(n,1);
-Xb = inv(B)*b';
-X(index) = Xb;
-y = inv(B)*A;
-Net_eval = Cb*y - c
-for s = 1:100
-     if Net_eval >= -10^(-10) 
-         if Xb >= 0 
-             disp("Solution is feasible")
-             break
-        else
-             [x_min,LV] = min(Xb) 
-             for j = 1:n
-                 if y(LV,j) < 0
-                    ratio(j) = abs(Net_eval(j)/y(LV,j))
-                 else
-                     ratio(j) = inf
-                 end
-            end
-             [r_min,EV] = min(ratio) 
-             if r_min == inf 
-                 disp("Solution is infeasible")
-                 break
-             end
-             index(LV) = EV
-             B = []
-             Cb = []
-     for i = 1:m
-         B = [B A(:,index(i))];
-     Cb = [Cb c(index(i))];
-     end
-X = zeros(n,1);
-Xb = inv(B)*b';
-X(index) = Xb;
-y = inv(B)*A;
-Net_eval = Cb*y - c
-        end
-     else
-         disp("Solution is not optimal")
-         break
-     end
-end
-disp(X)
-c*X
-
-
-Transportation Problem
-
-clc
-clear all
-c = [2 10 4 5 ; 6 12 8 11 ; 3 9 5 7];
-a = [ 12 25 20 ]
-b = [ 25 10 15 5 ]
-i = size(b,1);
-j = size(a,1);
-if sum(a) == sum(b)
-    fprintf('Balanced');
-else
-    fprintf('Unbalanced');
-        if(sum(b)<sum(a))
-        c(:,end 1) = zeros(1,i)
-        b(end 1) = sum(a) - sum(b)
-    else
-        c(end 1,:) = zeros(1,j)
-        s(end 1) = sum(b) - sum(a)
-        end
-end
-cc=c
-m = size(c,1);
-n = size(c,2);
-x=zeros(m,n);
-for i=1:m
-    for j=1:n
-cpq = min(min(c))
-if cpq == inf
-    break;
-end
-[p1,q1] = find(cpq==c)
-xpq = min(a(p1),b(q1))
-[x1,ind]=max(xpq)
-p=p1(ind)
-q=q1(ind)
-x(p,q)=min(a(p),b(q))
-if(x(p,q)==a(p))
-    b(q)=b(q)-x(p,q)
-    a(p)=a(p)-x(p,q)
-    c(p,:)=Inf
-else 
-    b(q)=b(q)-x(p,q)
-    a(p)=a(p)-x(p,q)
-    c(:,q)=Inf
-end
-    end
-end
-c
-x
-z=x.*cc
-cost=sum(sum(z))
-
-
-Fibonacci
-
+Dual Simplex 
 clc 
-clear 
-format short
-f=@(x) (x<0.5).*((1-x)./2)+(x>=0.5).*(x.^2);
-L=-1;
-R=1;
-n=6;
-t=linspace(L,R,100);
-plot(t,f(t));
-
-fib=ones(1,n);
-for i=3:n+1
-    fib(i)=fib(i-1)+fib(i-2);
+clear all
+n=4; 
+m=2; 
+b=[-2;-4] 
+A=[-1 -1 1 0;-4 -1 0 1]; 
+BV=[3 4]; 
+c=[-5 -6 0 0] 
+for i=1:50 
+ B=A(:,BV) 
+ cb=c(BV) 
+ Xb=inv(B)*b 
+ z=cb*Xb 
+ Y=inv(B)*A 
+ zjcj=cb*Y-c 
+ if(Xb>=0) 
+ disp('Feasibilty Achieved') 
+ Xb 
+ break
+ else
+ [a,LV]=min(Xb) 
+ for j=1:n 
+ if(Y(LV,j)<0) 
+ ratio(j)=zjcj(j)/Y(LV,j) 
+ else
+ ratio(j)=inf 
+ end
+ end
+ [l,EV]=min(abs(ratio)) 
+ BV(LV)=EV 
+ end
 end
-fib;
+zjcj=[inf zjcj z;BV' A Xb]
 
-for k=1:n
-    ratio=fib(n+1-k)./fib(n+2-k)
-    x2=L+ratio*(R-L);
-    x1=L+R-x2;
-    fx1=f(x1)
-    fx2=f(x2)
-    rs1(k,:)=[ L R x1 x2 fx1 fx2]
-    if fx1<fx2
-        R=x2;
-    elseif fx1>fx2
-        L=x1;
-    else if fx1==fx2
-            if min(abs(x1),abs(L))==abs(L)
-                R=x2;
-            else
-                L=x1;
-            end
-        end
-    end
+
+
+
+Transportation Problem 
+cost=[2 7 4;3 3 1;5 5 4;1 6 2]; 
+cc=cost 
+n=size(cost,1); 
+m=size(cost,2); 
+supply=[5 8 7 14]; 
+demand=[7 9 18]; 
+X=zeros(n,m) 
+if(sum(supply)==sum(demand)) 
+ disp('balanced problem') 
+elseif sum(supply)<sum(demand) 
+ disp('unbalanced problem') 
+ cost=[cost;zeros(1,m)] 
+ supply=[supply sum(demand)-sum(supply)] 
+else 
+ disp('unbalanced problem') 
+ cost=[cost zeros(n,1)] 
+ supply=[supply sum(supply)-sum(demand)] 
+end 
+for i=1:n 
+ for j=1:m 
+ temp=min(cost(:)); 
+ %cost(:) will convert 2d to vector 
+ [r,c]=find(temp==cost) 
+ y=min(supply(r),demand(c)) 
+ [val,index]=max(y) 
+ pos_row=r(index) 
+ pos_col=c(index) 
+ X(pos_row,pos_col)=val 
+ supply(pos_row)=supply(pos_row)-val 
+ demand(pos_col)=demand(pos_col)-val 
+ cost(pos_row,pos_col)=inf 
+ end 
+end 
+fc=cc.*X 
+final_cost=sum(fc(:)) 
+X 
+
+
+
+
+
+Fibonacci 
+clc 
+clear all 
+f=@(x) x^2 
+a=-5; 
+b=15; 
+n=7; 
+F(1)=1; 
+F(2)=1; 
+for i=3:n+1 
+ F(i)=F(i-1)+F(i-2); 
+end 
+table=[]; 
+for k=1:n 
+ x1=a+(F(n-2+1)/F(n+1))*(b-a); 
+ x2=b-(F(n-2+1)/F(n+1))*(b-a); 
+ fx1=f(x1); 
+ fx2=f(x2); 
+ table=[table; k x1 x2 fx1 fx2];
+ if(fx1<fx2) 
+ b=x2 
+ else 
+ a=x1 
+ end 
+end 
+opt=(a+b)/2 
+optval=f(opt) 
+disp(table)
+
+
+
+
+Weighted Sum: 
+clc 
+clearvars 
+mocost=[3 2 0;2 3 0] 
+w=1/size(mocost,1) 
+socost=sum(mocost.*w) 
+C=socost 
+A=[-1 -1 1 -2] 
+BV=[3] 
+answer=[0 0 0] 
+zjcj=[0 0 0 0] 
+RUN=true; 
+while RUN 
+ for i=1:size(A,2)-1 
+ zjcj(i)=sum(C(BV)*A(:,i))-C(i); 
+ end 
+ if any(A(:,size(A,2))<0) 
+ disp('the current BFS is not feasible') 
+ [lval, pvt_row]=min(A(:,size(A,2))) 
+ for i=1:size(A,2)-1 
+ if A(pvt_row,i)<0 
+ m(i)=zjcj(i)/A(pvt_row,i) 
+ else 
+ m(i)=-inf 
+ end 
+ end 
+ [ent_val, pvt_col]=max(m) 
+ A(pvt_row,:)=A(pvt_row,:)/A(pvt_row,pvt_col) 
+ for i=1:size(A,1) 
+ if i~=pvt_row 
+ A(i,:)=A(i,:)-A(i,pvt_col).*A(pvt_row,:) 
+ end 
+ end 
+ BV(pvt_row)=pvt_col; 
+ else 
+ RUN=false; 
+ disp('current BFS is Feasible and Optimal\n') 
+ answer(BV)=A(:,size(A,2)) 
+ end 
 end
-
-rsl(k,:)=[L R x1 x2 fx1 fx2]
-var ={'L','R','x1','x2','fx1','fx2'};
-res1=array2table(rs1);
-res1.Properties.VariableNames(1:size(res1,2))=var;
-
-xopt=(L+R)/2;
-fopt=f(xopt);
-xopt
-fopt
